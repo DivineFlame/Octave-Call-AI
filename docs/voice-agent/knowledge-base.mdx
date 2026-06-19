@@ -9,13 +9,17 @@ The Knowledge Base lets you upload documents that your voice agents can referenc
 An embedding API key (configured in **AI Models Configuration → Embedding**) is required for **Chunked Search** mode. **Full Document** mode does not require embeddings.
 </Warning>
 
+<Tip>
+Self-hosted deployments can use Ollama for Chunked Search. Select the **Ollama** embedding provider, use `http://ollama:11434/v1` as the base URL, `ollama` as the API key, and a 1536-dimensional embedding model such as `rjmalagon/gte-qwen2-1.5b-instruct-embed-f16`.
+</Tip>
+
 ![Embedding Configuration](../images/embedding-configurations.png)
 
 ## How It Works
 
 1. You **upload** a document (PDF, DOCX, TXT, or JSON) to the Knowledge Base
 2. You **choose a retrieval mode** — Full Document or Chunked Search
-3. Dograh **processes** the document based on the selected mode
+3. Octave-Call-AI **processes** the document based on the selected mode
 4. You **attach** the document to one or more workflow nodes
 5. During a call, the agent **retrieves** information from the document and uses it to generate accurate responses
 

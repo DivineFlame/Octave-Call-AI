@@ -1,4 +1,4 @@
-const DOCS_BASE = "https://docs.dograh.com";
+const DOCS_BASE = "https://github.com/DivineFlame/Octave-Call-AI/tree/main/docs";
 
 export const NODE_DOCUMENTATION_URLS: Record<string, string> = {
     startCall: `${DOCS_BASE}/voice-agent/start-call`,

@@ -1,17 +1,17 @@
 {
-  "name": "@dograh/sdk",
+  "name": "@octave-call-ai/sdk",
   "version": "0.1.8",
-  "description": "Typed builder for Dograh voice-AI workflows",
+  "description": "Typed builder for Octave-Call-AI voice-AI workflows",
   "license": "BSD-2-Clause",
   "author": "Zansat Technologies Private Limited",
-  "homepage": "https://dograh.com",
+  "homepage": "https://github.com/DivineFlame/Octave-Call-AI",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dograh-hq/dograh.git",
+    "url": "https://github.com/DivineFlame/Octave-Call-AI.git",
     "directory": "sdk/typescript"
   },
   "keywords": [
-    "dograh",
+    "octave-call-ai",
     "voice-ai",
     "workflow",
     "sdk",

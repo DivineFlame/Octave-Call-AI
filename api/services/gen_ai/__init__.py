@@ -4,6 +4,7 @@ from .embedding import (
     AzureEmbeddingAPIKeyNotConfiguredError,
     AzureOpenAIEmbeddingService,
     BaseEmbeddingService,
+    create_embedding_service,
     EmbeddingAPIKeyNotConfiguredError,
     OpenAIEmbeddingService,
 )
@@ -13,6 +14,7 @@ __all__ = [
     "AzureEmbeddingAPIKeyNotConfiguredError",
     "AzureOpenAIEmbeddingService",
     "BaseEmbeddingService",
+    "create_embedding_service",
     "EmbeddingAPIKeyNotConfiguredError",
     "OpenAIEmbeddingService",
     "parse_llm_json",

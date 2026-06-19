@@ -117,8 +117,8 @@ function Download-File([string]$Url, [string]$Destination) {
 }
 
 function Download-BundleFileForRef([string]$Destination, [string]$RemotePath, [string]$Ref) {
-    $rawBase = "https://raw.githubusercontent.com/dograh-hq/dograh/$Ref"
-    $fallbackBase = 'https://raw.githubusercontent.com/dograh-hq/dograh/main'
+    $rawBase = "https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/$Ref"
+    $fallbackBase = 'https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/main'
 
     try {
         Download-File "$rawBase/$RemotePath" $Destination
@@ -134,7 +134,7 @@ function Download-BundleFileForRef([string]$Destination, [string]$RemotePath, [s
 
 function Download-InitSupportBundle([string]$ProjectDir, [string]$Ref) {
     Download-BundleFileForRef (Join-Path $ProjectDir 'scripts/lib/setup_common.sh') 'scripts/lib/setup_common.sh' $Ref
-    Download-BundleFileForRef (Join-Path $ProjectDir 'scripts/run_dograh_init.sh') 'scripts/run_dograh_init.sh' $Ref
+    Download-BundleFileForRef (Join-Path $ProjectDir 'scripts/run_octave_call_ai_init.sh') 'scripts/run_octave_call_ai_init.sh' $Ref
     Download-BundleFileForRef (Join-Path $ProjectDir 'deploy/templates/nginx.remote.conf.template') 'deploy/templates/nginx.remote.conf.template' $Ref
     Download-BundleFileForRef (Join-Path $ProjectDir 'deploy/templates/turnserver.remote.conf.template') 'deploy/templates/turnserver.remote.conf.template' $Ref
 }
@@ -147,7 +147,7 @@ function Assert-PathExists([string]$Path, [string]$Message) {
 
 Write-Info ''
 Write-Info '╔══════════════════════════════════════════════════════════════╗'
-Write-Info '║                    Dograh Local Setup                        ║'
+Write-Info '║                    Octave-Call-AI Local Setup                        ║'
 Write-Info '║       Local docker deployment, optional TURN server          ║'
 Write-Info '╚══════════════════════════════════════════════════════════════╝'
 Write-Info ''
@@ -201,7 +201,7 @@ if ($UseCoturn) {
 }
 
 $EnableTelemetry = if ([string]::IsNullOrEmpty($env:ENABLE_TELEMETRY)) { 'true' } else { $env:ENABLE_TELEMETRY }
-$Registry = if ([string]::IsNullOrEmpty($env:REGISTRY)) { 'ghcr.io/dograh-hq' } else { $env:REGISTRY }
+$Registry = if ([string]::IsNullOrEmpty($env:REGISTRY)) { 'ghcr.io/DivineFlame' } else { $env:REGISTRY }
 
 Write-Host ''
 Write-Success 'Configuration:'
@@ -218,14 +218,14 @@ Write-Host ''
 $TotalSteps = 2
 $CurrentDir = (Get-Location).Path
 
-if ($env:DOGRAH_SKIP_DOWNLOAD -ne '1') {
+if ($env:OCTAVE_CALL_AI_SKIP_DOWNLOAD -ne '1') {
     if ($UseCoturn) {
         Write-Info "[1/$TotalSteps] Downloading docker-compose.yaml and TURN helper bundle..."
     } else {
         Write-Info "[1/$TotalSteps] Downloading docker-compose.yaml..."
     }
 
-    Download-File 'https://raw.githubusercontent.com/dograh-hq/dograh/main/docker-compose.yaml' (Join-Path $CurrentDir 'docker-compose.yaml')
+    Download-File 'https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/main/docker-compose.yaml' (Join-Path $CurrentDir 'docker-compose.yaml')
     if ($UseCoturn) {
         Download-InitSupportBundle $CurrentDir 'main'
     }
@@ -236,9 +236,9 @@ if ($env:DOGRAH_SKIP_DOWNLOAD -ne '1') {
 }
 
 if ($UseCoturn) {
-    Assert-PathExists 'scripts/run_dograh_init.sh' 'scripts/run_dograh_init.sh not found. Re-run setup_local.ps1 without DOGRAH_SKIP_DOWNLOAD=1, or use a full repo checkout.'
-    Assert-PathExists 'scripts/lib/setup_common.sh' 'scripts/lib/setup_common.sh not found. Re-run setup_local.ps1 without DOGRAH_SKIP_DOWNLOAD=1, or use a full repo checkout.'
-    Assert-PathExists 'deploy/templates/turnserver.remote.conf.template' 'deploy/templates/turnserver.remote.conf.template not found. Re-run setup_local.ps1 without DOGRAH_SKIP_DOWNLOAD=1, or use a full repo checkout.'
+    Assert-PathExists 'scripts/run_octave_call_ai_init.sh' 'scripts/run_octave_call_ai_init.sh not found. Re-run setup_local.ps1 without OCTAVE_CALL_AI_SKIP_DOWNLOAD=1, or use a full repo checkout.'
+    Assert-PathExists 'scripts/lib/setup_common.sh' 'scripts/lib/setup_common.sh not found. Re-run setup_local.ps1 without OCTAVE_CALL_AI_SKIP_DOWNLOAD=1, or use a full repo checkout.'
+    Assert-PathExists 'deploy/templates/turnserver.remote.conf.template' 'deploy/templates/turnserver.remote.conf.template not found. Re-run setup_local.ps1 without OCTAVE_CALL_AI_SKIP_DOWNLOAD=1, or use a full repo checkout.'
 }
 
 Write-Info "[2/$TotalSteps] Creating environment file..."
@@ -246,7 +246,7 @@ $ossJwtSecret = New-HexSecret 32
 $postgresPassword = New-HexSecret 32
 
 $envLines = @(
-    '# Container registry for Dograh images'
+    '# Container registry for Octave-Call-AI images'
     "REGISTRY=$Registry"
     ''
     '# JWT secret for OSS authentication'
@@ -286,17 +286,17 @@ Write-Host "Files created in $CurrentDir:" -ForegroundColor Blue
 Write-Host '  - docker-compose.yaml'
 Write-Host '  - .env'
 if ($UseCoturn) {
-    Write-Host '  - scripts/run_dograh_init.sh'
+    Write-Host '  - scripts/run_octave_call_ai_init.sh'
     Write-Host '  - scripts/lib/setup_common.sh'
     Write-Host '  - deploy/templates/'
 }
 Write-Host ''
 if ($UseCoturn) {
-    Write-Warn 'To start Dograh with TURN, run:'
+    Write-Warn 'To start Octave-Call-AI with TURN, run:'
     Write-Host ''
     Write-Host '  docker compose --profile local-turn up --pull always' -ForegroundColor Blue
 } else {
-    Write-Warn 'To start Dograh, run:'
+    Write-Warn 'To start Octave-Call-AI, run:'
     Write-Host ''
     Write-Host '  docker compose up --pull always' -ForegroundColor Blue
 }

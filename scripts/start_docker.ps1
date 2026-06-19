@@ -1,7 +1,7 @@
 $ErrorActionPreference = 'Stop'
 
 $EnvFile = '.env'
-$Registry = if ([string]::IsNullOrEmpty($env:REGISTRY)) { 'ghcr.io/dograh-hq' } else { $env:REGISTRY }
+$Registry = if ([string]::IsNullOrEmpty($env:REGISTRY)) { 'ghcr.io/DivineFlame' } else { $env:REGISTRY }
 $EnableTelemetry = if ([string]::IsNullOrEmpty($env:ENABLE_TELEMETRY)) { 'true' } else { $env:ENABLE_TELEMETRY }
 $Utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 
@@ -81,9 +81,9 @@ Write-Host 'This will run:'
 Write-Host "  `$env:REGISTRY = '$Registry'; `$env:ENABLE_TELEMETRY = '$EnableTelemetry'; docker compose up --pull always"
 Write-Host ''
 
-$answer = Read-Host 'Start Dograh now? [Y/n]'
+$answer = Read-Host 'Start Octave-Call-AI now? [Y/n]'
 if ($answer -match '^[Nn]') {
-    Write-Host 'Dograh was not started.'
+    Write-Host 'Octave-Call-AI was not started.'
     exit 0
 }
 

@@ -14,7 +14,7 @@ BOOTSTRAP_LIB=""
 
 if [[ ! -f "$LIB_PATH" ]]; then
     BOOTSTRAP_LIB="$(mktemp)"
-    curl -fsSL -o "$BOOTSTRAP_LIB" "https://raw.githubusercontent.com/dograh-hq/dograh/main/scripts/lib/setup_common.sh"
+    curl -fsSL -o "$BOOTSTRAP_LIB" "https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/main/scripts/lib/setup_common.sh"
     LIB_PATH="$BOOTSTRAP_LIB"
 fi
 
@@ -30,7 +30,7 @@ trap cleanup EXIT
 
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                   Dograh Remote Setup                        ║"
+echo "║                   Octave-Call-AI Remote Setup                        ║"
 echo "║      Automated HTTPS deployment with TURN server             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -42,11 +42,11 @@ if [[ -z "${SERVER_IP:-}" ]]; then
 fi
 
 if [[ -z "$SERVER_IP" ]]; then
-    dograh_fail "IP address cannot be empty"
+    octave_call_ai_fail "IP address cannot be empty"
 fi
 
-if ! dograh_is_ipv4 "$SERVER_IP"; then
-    dograh_fail "Invalid IP address format"
+if ! octave_call_ai_is_ipv4 "$SERVER_IP"; then
+    octave_call_ai_fail "Invalid IP address format"
 fi
 
 FORCE_TURN_RELAY="${FORCE_TURN_RELAY:-false}"
@@ -69,14 +69,14 @@ if [[ -z "${DEPLOY_MODE:-}" ]]; then
     if [[ -t 0 ]]; then
         echo ""
         echo -e "${YELLOW}Deployment mode:${NC}"
-        echo "  1) prebuilt - pull official dograh images (recommended, fastest)"
+        echo "  1) prebuilt - pull official octave-call-ai images (recommended, fastest)"
         echo "  2) build    - build images from source (for forks or local customizations)"
         read -p "Choose [1]: " mode_choice
         mode_choice="${mode_choice:-1}"
         case "$mode_choice" in
             1|prebuilt) DEPLOY_MODE="prebuilt" ;;
             2|build) DEPLOY_MODE="build" ;;
-            *) dograh_fail "invalid choice '$mode_choice'" ;;
+            *) octave_call_ai_fail "invalid choice '$mode_choice'" ;;
         esac
     else
         DEPLOY_MODE="prebuilt"
@@ -109,10 +109,10 @@ if [[ "$DEPLOY_MODE" == "build" ]]; then
             if [[ -t 0 ]]; then
                 echo ""
                 echo -e "${YELLOW}GitHub repo to clone (format: owner/name):${NC}"
-                read -p "[dograh-hq/dograh]: " FORK_REPO
-                FORK_REPO="${FORK_REPO:-dograh-hq/dograh}"
+                read -p "[DivineFlame/Octave-Call-AI]: " FORK_REPO
+                FORK_REPO="${FORK_REPO:-DivineFlame/Octave-Call-AI}"
             else
-                FORK_REPO="dograh-hq/dograh"
+                FORK_REPO="DivineFlame/Octave-Call-AI"
             fi
         fi
 
@@ -142,15 +142,15 @@ if [[ -z "$FASTAPI_WORKERS" ]]; then
     fi
 fi
 
-[[ "$FASTAPI_WORKERS" =~ ^[1-9][0-9]*$ ]] || dograh_fail "FASTAPI_WORKERS must be a positive integer (got: $FASTAPI_WORKERS)"
+[[ "$FASTAPI_WORKERS" =~ ^[1-9][0-9]*$ ]] || octave_call_ai_fail "FASTAPI_WORKERS must be a positive integer (got: $FASTAPI_WORKERS)"
 
 if [[ "$DEPLOY_MODE" == "build" && "${REPO_SOURCE:-}" == "existing" ]]; then
     TARGET_DIR="."
 else
-    TARGET_DIR="dograh"
+    TARGET_DIR="octave-call-ai"
 fi
 
-if [[ "${DOGRAH_FORCE_OVERWRITE:-}" != "1" && "${DOGRAH_SKIP_DOWNLOAD:-}" != "1" ]]; then
+if [[ "${OCTAVE_CALL_AI_FORCE_OVERWRITE:-}" != "1" && "${OCTAVE_CALL_AI_SKIP_DOWNLOAD:-}" != "1" ]]; then
     if [[ -f "$TARGET_DIR/.env" ]]; then
         if [[ "$TARGET_DIR" == "." ]]; then
             existing_path="$(pwd)/.env"
@@ -158,7 +158,7 @@ if [[ "${DOGRAH_FORCE_OVERWRITE:-}" != "1" && "${DOGRAH_SKIP_DOWNLOAD:-}" != "1"
             existing_path="$(pwd)/$TARGET_DIR/.env"
         fi
         echo ""
-        echo -e "${YELLOW}Detected an existing Dograh install:${NC}"
+        echo -e "${YELLOW}Detected an existing Octave-Call-AI install:${NC}"
         echo -e "  ${YELLOW}$existing_path${NC}"
         echo ""
         echo -e "${RED}Refusing to continue - re-running setup would:${NC}"
@@ -167,10 +167,10 @@ if [[ "${DOGRAH_FORCE_OVERWRITE:-}" != "1" && "${DOGRAH_SKIP_DOWNLOAD:-}" != "1"
         echo -e "${RED}  - replace the validated remote deployment bundle${NC}"
         echo ""
         echo -e "${BLUE}To upgrade an existing install, follow:${NC}"
-        echo -e "  ${BLUE}https://docs.dograh.com/deployment/update${NC}"
+        echo -e "  ${BLUE}https://github.com/DivineFlame/Octave-Call-AI/tree/main/docs/deployment/update${NC}"
         echo ""
         echo -e "${BLUE}To wipe state and reinstall from scratch, re-run with:${NC}"
-        echo -e "  ${BLUE}DOGRAH_FORCE_OVERWRITE=1 <same command>${NC}"
+        echo -e "  ${BLUE}OCTAVE_CALL_AI_FORCE_OVERWRITE=1 <same command>${NC}"
         echo ""
         exit 1
     fi
@@ -199,34 +199,34 @@ fi
 echo ""
 
 if [[ "$DEPLOY_MODE" == "build" ]]; then
-    if [[ "${DOGRAH_SKIP_DOWNLOAD:-}" == "1" ]]; then
+    if [[ "${OCTAVE_CALL_AI_SKIP_DOWNLOAD:-}" == "1" ]]; then
         echo -e "${BLUE}[1/$TOTAL] Using existing repo in current directory${NC}"
     elif [[ "${REPO_SOURCE:-}" == "clone" ]]; then
-        if [[ -e "dograh" ]]; then
-            dograh_fail "'dograh' directory already exists. Remove it or re-run with REPO_SOURCE=existing from inside it."
+        if [[ -e "octave-call-ai" ]]; then
+            octave_call_ai_fail "'octave-call-ai' directory already exists. Remove it or re-run with REPO_SOURCE=existing from inside it."
         fi
         echo -e "${BLUE}[1/$TOTAL] Cloning $FORK_REPO (branch: $BRANCH)...${NC}"
-        git clone --branch "$BRANCH" --recurse-submodules "https://github.com/$FORK_REPO.git" dograh
-        cd dograh
+        git clone --branch "$BRANCH" --recurse-submodules "https://github.com/$FORK_REPO.git" octave-call-ai
+        cd octave-call-ai
         echo -e "${GREEN}✓ Repo cloned${NC}"
     else
         echo -e "${BLUE}[1/$TOTAL] Using existing repo at $(pwd)${NC}"
     fi
 else
-    if [[ "${DOGRAH_SKIP_DOWNLOAD:-}" != "1" ]]; then
-        mkdir -p dograh 2>/dev/null || true
-        cd dograh
+    if [[ "${OCTAVE_CALL_AI_SKIP_DOWNLOAD:-}" != "1" ]]; then
+        mkdir -p octave-call-ai 2>/dev/null || true
+        cd octave-call-ai
 
         echo -e "${BLUE}[1/$TOTAL] Downloading deployment bundle...${NC}"
-        curl -fsSL -o docker-compose.yaml "https://raw.githubusercontent.com/dograh-hq/dograh/main/docker-compose.yaml"
-        dograh_download_remote_support_bundle "$(pwd)" "main"
+        curl -fsSL -o docker-compose.yaml "https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/main/docker-compose.yaml"
+        octave_call_ai_download_remote_support_bundle "$(pwd)" "main"
         echo -e "${GREEN}✓ Deployment bundle downloaded${NC}"
     else
         echo -e "${BLUE}[1/$TOTAL] Using deployment files in current directory${NC}"
     fi
 fi
 
-DOGRAH_DEPLOY_PROJECT_DIR="$(pwd)"
+OCTAVE_CALL_AI_DEPLOY_PROJECT_DIR="$(pwd)"
 
 if [[ "$DEPLOY_MODE" != "prebuilt" ]]; then
     chmod +x remote_up.sh
@@ -291,7 +291,7 @@ ENV_EOF
 echo -e "${GREEN}✓ .env file created${NC}"
 
 echo -e "${BLUE}[5/$TOTAL] Validating remote init configuration...${NC}"
-dograh_prepare_remote_install "$(pwd)"
+octave_call_ai_prepare_remote_install "$(pwd)"
 echo -e "${GREEN}✓ Remote init configuration validated${NC}"
 
 if [[ "$DEPLOY_MODE" == "build" ]]; then
@@ -306,14 +306,14 @@ services:
     build:
       context: .
       dockerfile: api/Dockerfile
-    image: dograh-local/dograh-api:local
+    image: octave-call-ai-local/octave-call-ai-api:local
     pull_policy: never
 
   ui:
     build:
       context: .
       dockerfile: ui/Dockerfile
-    image: dograh-local/dograh-ui:local
+    image: octave-call-ai-local/octave-call-ai-ui:local
     pull_policy: never
 OVERRIDE_EOF
     echo -e "${GREEN}✓ docker-compose.override.yaml created${NC}"
@@ -330,14 +330,14 @@ if [[ "$DEPLOY_MODE" == "build" ]]; then
     echo "  - docker-compose.override.yaml  (build directives)"
 fi
 echo "  - remote_up.sh"
-echo "  - scripts/run_dograh_init.sh"
+echo "  - scripts/run_octave_call_ai_init.sh"
 echo "  - deploy/templates/"
 echo "  - generate_certificate.sh"
 echo "  - certs/local.crt"
 echo "  - certs/local.key"
 echo "  - .env"
 echo ""
-echo -e "${YELLOW}To start Dograh, run:${NC}"
+echo -e "${YELLOW}To start Octave-Call-AI, run:${NC}"
 echo ""
 if [[ "$DEPLOY_MODE" != "build" || "${REPO_SOURCE:-}" != "existing" ]]; then
     echo -e "  ${BLUE}cd $(pwd)${NC}"

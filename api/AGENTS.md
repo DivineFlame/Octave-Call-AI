@@ -1,6 +1,6 @@
 # API - Backend Service
 
-FastAPI backend for the Dograh voice AI platform.
+FastAPI backend for the Octave-Call-AI voice AI platform.
 
 ## Project Structure
 

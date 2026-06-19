@@ -68,12 +68,13 @@ class ServiceProviders(str, Enum):
     GOOGLE = "google"
     AZURE = "azure"
     AZURE_SPEECH = "azure_speech"
-    DOGRAH = "dograh"
+    OCTAVE_CALL_AI = "octave_call_ai"
     SARVAM = "sarvam"
     SPEECHMATICS = "speechmatics"
     CAMB = "camb"
     AWS_BEDROCK = "aws_bedrock"
     SPEACHES = "speaches"
+    OLLAMA = "ollama"
     HUGGINGFACE = "huggingface"
     ASSEMBLYAI = "assemblyai"
     GLADIA = "gladia"
@@ -100,9 +101,10 @@ class BaseServiceConfiguration(BaseModel):
         ServiceProviders.GOOGLE,
         ServiceProviders.AZURE,
         ServiceProviders.AZURE_SPEECH,
-        ServiceProviders.DOGRAH,
+        ServiceProviders.OCTAVE_CALL_AI,
         ServiceProviders.AWS_BEDROCK,
         ServiceProviders.SPEACHES,
+        ServiceProviders.OLLAMA,
         ServiceProviders.HUGGINGFACE,
         ServiceProviders.ASSEMBLYAI,
         ServiceProviders.GLADIA,
@@ -238,7 +240,7 @@ GOOGLE_PROVIDER_MODEL_CONFIG = provider_model_config("Google")
 GROQ_PROVIDER_MODEL_CONFIG = provider_model_config("Groq")
 OPENROUTER_PROVIDER_MODEL_CONFIG = provider_model_config("Open Router")
 AZURE_OPENAI_PROVIDER_MODEL_CONFIG = provider_model_config("Azure OpenAI")
-DOGRAH_PROVIDER_MODEL_CONFIG = provider_model_config("Dograh")
+OCTAVE_CALL_AI_PROVIDER_MODEL_CONFIG = provider_model_config("Octave-Call-AI")
 AWS_BEDROCK_PROVIDER_MODEL_CONFIG = provider_model_config("AWS Bedrock")
 GOOGLE_VERTEX_PROVIDER_MODEL_CONFIG = provider_model_config("Google Vertex")
 OPENAI_REALTIME_PROVIDER_MODEL_CONFIG = provider_model_config("OpenAI Realtime")
@@ -273,6 +275,11 @@ SPEACHES_PROVIDER_MODEL_CONFIG = provider_model_config(
         "for setup and supported backends."
     ),
     provider_docs_url="https://github.com/speaches-ai/speaches",
+)
+OLLAMA_PROVIDER_MODEL_CONFIG = provider_model_config(
+    "Ollama",
+    description="Self-hosted Ollama OpenAI-compatible models.",
+    provider_docs_url="https://docs.ollama.com/api/openai-compatibility",
 )
 HUGGINGFACE_PROVIDER_MODEL_CONFIG = provider_model_config(
     "Hugging Face",
@@ -319,7 +326,7 @@ OPENROUTER_MODELS = [
     "meta-llama/llama-3.3-70b-instruct",
     "deepseek/deepseek-chat-v3-0324",
 ]
-DOGRAH_LLM_MODELS = ["default", "accurate", "fast", "lite", "zen"]
+OCTAVE_CALL_AI_LLM_MODELS = ["default", "accurate", "fast", "lite", "zen"]
 AWS_BEDROCK_MODELS = [
     "us.amazon.nova-pro-v1:0",
     "us.amazon.nova-lite-v1:0",
@@ -433,13 +440,13 @@ class AzureLLMService(BaseLLMConfiguration):
 
 
 @register_llm
-class DograhLLMService(BaseLLMConfiguration):
-    model_config = DOGRAH_PROVIDER_MODEL_CONFIG
-    provider: Literal[ServiceProviders.DOGRAH] = ServiceProviders.DOGRAH
+class OctaveCallAILLMService(BaseLLMConfiguration):
+    model_config = OCTAVE_CALL_AI_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.OCTAVE_CALL_AI] = ServiceProviders.OCTAVE_CALL_AI
     model: str = Field(
         default="default",
-        description="Dograh-hosted model tier.",
-        json_schema_extra={"examples": DOGRAH_LLM_MODELS, "allow_custom_input": True},
+        description="Octave-Call-AI-hosted model tier.",
+        json_schema_extra={"examples": OCTAVE_CALL_AI_LLM_MODELS, "allow_custom_input": True},
     )
 
 
@@ -791,7 +798,7 @@ LLMConfig = Annotated[
         OpenRouterLLMConfiguration,
         GoogleLLMService,
         AzureLLMService,
-        DograhLLMService,
+        OctaveCallAILLMService,
         AWSBedrockLLMConfiguration,
         SpeachesLLMConfiguration,
         HuggingFaceLLMConfiguration,
@@ -873,7 +880,7 @@ class GoogleTTSConfiguration(BaseTTSConfiguration):
     model: str = Field(
         default="chirp_3_hd",
         description=(
-            "Google Cloud low-latency TTS engine. Dograh maps this to Pipecat's "
+            "Google Cloud low-latency TTS engine. Octave-Call-AI maps this to Pipecat's "
             "streaming Google TTS service for Chirp 3 HD and Journey voices."
         ),
         json_schema_extra={
@@ -946,17 +953,17 @@ class OpenAITTSService(BaseTTSConfiguration):
     )
 
 
-DOGRAH_TTS_MODELS = ["default"]
+OCTAVE_CALL_AI_TTS_MODELS = ["default"]
 
 
 @register_tts
-class DograhTTSService(BaseTTSConfiguration):
-    model_config = DOGRAH_PROVIDER_MODEL_CONFIG
-    provider: Literal[ServiceProviders.DOGRAH] = ServiceProviders.DOGRAH
+class OctaveCallAITTSService(BaseTTSConfiguration):
+    model_config = OCTAVE_CALL_AI_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.OCTAVE_CALL_AI] = ServiceProviders.OCTAVE_CALL_AI
     model: str = Field(
         default="default",
-        description="Dograh TTS tier.",
-        json_schema_extra={"examples": DOGRAH_TTS_MODELS},
+        description="Octave-Call-AI TTS tier.",
+        json_schema_extra={"examples": OCTAVE_CALL_AI_TTS_MODELS},
     )
     voice: str = Field(
         default="default",
@@ -1282,7 +1289,7 @@ TTSConfig = Annotated[
         ElevenlabsTTSConfiguration,
         CartesiaTTSConfiguration,
         InworldTTSConfiguration,
-        DograhTTSService,
+        OctaveCallAITTSService,
         SarvamTTSConfiguration,
         CambTTSConfiguration,
         RimeTTSConfiguration,
@@ -1394,24 +1401,24 @@ class GoogleSTTConfiguration(BaseSTTConfiguration):
     )
 
 
-# Dograh STT Service
-DOGRAH_STT_MODELS = ["default"]
-DOGRAH_STT_LANGUAGES = DEEPGRAM_LANGUAGES
+# Octave-Call-AI STT Service
+OCTAVE_CALL_AI_STT_MODELS = ["default"]
+OCTAVE_CALL_AI_STT_LANGUAGES = DEEPGRAM_LANGUAGES
 
 
 @register_stt
-class DograhSTTService(BaseSTTConfiguration):
-    model_config = DOGRAH_PROVIDER_MODEL_CONFIG
-    provider: Literal[ServiceProviders.DOGRAH] = ServiceProviders.DOGRAH
+class OctaveCallAISTTService(BaseSTTConfiguration):
+    model_config = OCTAVE_CALL_AI_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.OCTAVE_CALL_AI] = ServiceProviders.OCTAVE_CALL_AI
     model: str = Field(
         default="default",
-        description="Dograh STT tier.",
-        json_schema_extra={"examples": DOGRAH_STT_MODELS},
+        description="Octave-Call-AI STT tier.",
+        json_schema_extra={"examples": OCTAVE_CALL_AI_STT_MODELS},
     )
     language: str = Field(
         default="multi",
         description="Language code; use 'multi' for auto-detect.",
-        json_schema_extra={"examples": DOGRAH_STT_LANGUAGES},
+        json_schema_extra={"examples": OCTAVE_CALL_AI_STT_LANGUAGES},
     )
 
 
@@ -1650,7 +1657,7 @@ STTConfig = Annotated[
         CartesiaSTTConfiguration,
         OpenAISTTConfiguration,
         GoogleSTTConfiguration,
-        DograhSTTService,
+        OctaveCallAISTTService,
         SpeechmaticsSTTConfiguration,
         SarvamSTTConfiguration,
         SpeachesSTTConfiguration,
@@ -1698,6 +1705,34 @@ class OpenRouterEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
     )
 
 
+OLLAMA_EMBEDDING_MODELS = ["rjmalagon/gte-qwen2-1.5b-instruct-embed-f16"]
+
+
+@register_embeddings
+class OllamaEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
+    model_config = OLLAMA_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.OLLAMA] = ServiceProviders.OLLAMA
+    api_key: str = Field(
+        default="ollama",
+        description="Dummy API key for Ollama's OpenAI-compatible API.",
+    )
+    model: str = Field(
+        default="rjmalagon/gte-qwen2-1.5b-instruct-embed-f16",
+        description=(
+            "Ollama embedding model. The knowledge-base vector column expects "
+            "1536-dimensional embeddings."
+        ),
+        json_schema_extra={
+            "examples": OLLAMA_EMBEDDING_MODELS,
+            "allow_custom_input": True,
+        },
+    )
+    base_url: str = Field(
+        default="http://ollama:11434/v1",
+        description="Ollama OpenAI-compatible API base URL.",
+    )
+
+
 @register_embeddings
 class AzureOpenAIEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
     model_config = AZURE_OPENAI_PROVIDER_MODEL_CONFIG
@@ -1722,17 +1757,17 @@ class AzureOpenAIEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
     )
 
 
-DOGRAH_EMBEDDING_MODELS = ["default"]
+OCTAVE_CALL_AI_EMBEDDING_MODELS = ["default"]
 
 
 @register_embeddings
-class DograhEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
-    model_config = DOGRAH_PROVIDER_MODEL_CONFIG
-    provider: Literal[ServiceProviders.DOGRAH] = ServiceProviders.DOGRAH
+class OctaveCallAIEmbeddingsConfiguration(BaseEmbeddingsConfiguration):
+    model_config = OCTAVE_CALL_AI_PROVIDER_MODEL_CONFIG
+    provider: Literal[ServiceProviders.OCTAVE_CALL_AI] = ServiceProviders.OCTAVE_CALL_AI
     model: str = Field(
         default="default",
-        description="Dograh-managed embedding model.",
-        json_schema_extra={"examples": DOGRAH_EMBEDDING_MODELS},
+        description="Octave-Call-AI-managed embedding model.",
+        json_schema_extra={"examples": OCTAVE_CALL_AI_EMBEDDING_MODELS},
     )
 
 
@@ -1740,8 +1775,9 @@ EmbeddingsConfig = Annotated[
     Union[
         OpenAIEmbeddingsConfiguration,
         OpenRouterEmbeddingsConfiguration,
+        OllamaEmbeddingsConfiguration,
         AzureOpenAIEmbeddingsConfiguration,
-        DograhEmbeddingsConfiguration,
+        OctaveCallAIEmbeddingsConfiguration,
     ],
     Field(discriminator="provider"),
 ]

@@ -112,8 +112,8 @@ class TelnyxProvider(TelephonyProvider):
             f"{backend_endpoint}/api/v1/telephony/telnyx/events/{workflow_run_id}"
         )
 
-        # stream_bidirectional_codec controls only the Dograh → Telnyx direction.
-        # The Telnyx → Dograh direction follows the PSTN leg and is announced via
+        # stream_bidirectional_codec controls only the Octave-Call-AI → Telnyx direction.
+        # The Telnyx → Octave-Call-AI direction follows the PSTN leg and is announced via
         # media_format.encoding in the WebSocket start message.
         payload = {
             "connection_id": self.connection_id,
@@ -373,7 +373,7 @@ class TelnyxProvider(TelephonyProvider):
                 return
 
             # media_format.encoding is the codec Telnyx delivers on the
-            # inbound direction (Telnyx → Dograh); the outbound direction is
+            # inbound direction (Telnyx → Octave-Call-AI); the outbound direction is
             # pinned to PCMU separately via stream_bidirectional_codec.
             try:
                 stream_id = start_data.get("stream_id", "")

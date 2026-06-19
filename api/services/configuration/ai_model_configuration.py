@@ -14,13 +14,13 @@ from api.db import db_client
 from api.db.models import WorkflowDefinitionModel, WorkflowModel
 from api.enums import OrganizationConfigurationKey
 from api.schemas.ai_model_configuration import (
-    DOGRAH_DEFAULT_LANGUAGE,
-    DOGRAH_DEFAULT_VOICE,
-    DOGRAH_SPEED_OPTIONS,
+    OCTAVE_CALL_AI_DEFAULT_LANGUAGE,
+    OCTAVE_CALL_AI_DEFAULT_VOICE,
+    OCTAVE_CALL_AI_SPEED_OPTIONS,
     BYOKAIModelConfiguration,
     BYOKPipelineAIModelConfiguration,
     BYOKRealtimeAIModelConfiguration,
-    DograhManagedAIModelConfiguration,
+    OctaveCallAIManagedAIModelConfiguration,
     EffectiveAIModelConfiguration,
     OrganizationAIModelConfigurationV2,
     compile_ai_model_configuration_v2,
@@ -238,13 +238,13 @@ def merge_ai_model_configuration_v2_secrets(
     incoming_dict = incoming.model_dump(mode="json", exclude_none=True)
     existing_dict = existing.model_dump(mode="json", exclude_none=True)
 
-    if incoming_dict.get("mode") == "dograh" and existing_dict.get("mode") == "dograh":
-        incoming_dograh = incoming_dict.get("dograh") or {}
-        existing_dograh = existing_dict.get("dograh") or {}
-        incoming_key = incoming_dograh.get("api_key")
-        existing_key = existing_dograh.get("api_key")
+    if incoming_dict.get("mode") == "octave_call_ai" and existing_dict.get("mode") == "octave_call_ai":
+        incoming_octave_call_ai = incoming_dict.get("octave_call_ai") or {}
+        existing_octave_call_ai = existing_dict.get("octave_call_ai") or {}
+        incoming_key = incoming_octave_call_ai.get("api_key")
+        existing_key = existing_octave_call_ai.get("api_key")
         if incoming_key and existing_key and contains_masked_key(incoming_key):
-            incoming_dograh["api_key"] = resolve_masked_api_keys(
+            incoming_octave_call_ai["api_key"] = resolve_masked_api_keys(
                 incoming_key,
                 existing_key,
             )
@@ -275,9 +275,9 @@ def mask_ai_model_configuration_v2(
 def convert_legacy_ai_model_configuration_to_v2(
     configuration: EffectiveAIModelConfiguration,
 ) -> OrganizationAIModelConfigurationV2:
-    dograh_key = _first_dograh_api_key(configuration)
-    if dograh_key:
-        return _convert_any_dograh_legacy_configuration(configuration, dograh_key)
+    octave_call_ai_key = _first_octave_call_ai_api_key(configuration)
+    if octave_call_ai_key:
+        return _convert_any_octave_call_ai_legacy_configuration(configuration, octave_call_ai_key)
 
     if configuration.is_realtime:
         if configuration.realtime is None or configuration.llm is None:
@@ -314,7 +314,7 @@ def convert_legacy_ai_model_configuration_to_v2(
     )
 
 
-def dograh_embeddings_base_url() -> str:
+def octave_call_ai_embeddings_base_url() -> str:
     return f"{MPS_API_URL}/api/v1/llm"
 
 
@@ -323,8 +323,8 @@ def apply_managed_embeddings_base_url(
     provider: str | None,
     base_url: str | None,
 ) -> str | None:
-    if provider == ServiceProviders.DOGRAH.value or provider == ServiceProviders.DOGRAH:
-        return dograh_embeddings_base_url()
+    if provider == ServiceProviders.OCTAVE_CALL_AI.value or provider == ServiceProviders.OCTAVE_CALL_AI:
+        return octave_call_ai_embeddings_base_url()
     return base_url
 
 
@@ -431,27 +431,27 @@ def _has_model_services(configuration: EffectiveAIModelConfiguration) -> bool:
     )
 
 
-def _convert_any_dograh_legacy_configuration(
+def _convert_any_octave_call_ai_legacy_configuration(
     configuration: EffectiveAIModelConfiguration,
-    dograh_key: str,
+    octave_call_ai_key: str,
 ) -> OrganizationAIModelConfigurationV2:
     speed = getattr(configuration.tts, "speed", 1.0)
-    if speed not in DOGRAH_SPEED_OPTIONS:
+    if speed not in OCTAVE_CALL_AI_SPEED_OPTIONS:
         speed = 1.0
     return OrganizationAIModelConfigurationV2(
-        mode="dograh",
-        dograh=DograhManagedAIModelConfiguration(
-            api_key=dograh_key,
-            voice=getattr(configuration.tts, "voice", DOGRAH_DEFAULT_VOICE)
-            or DOGRAH_DEFAULT_VOICE,
+        mode="octave_call_ai",
+        octave_call_ai=OctaveCallAIManagedAIModelConfiguration(
+            api_key=octave_call_ai_key,
+            voice=getattr(configuration.tts, "voice", OCTAVE_CALL_AI_DEFAULT_VOICE)
+            or OCTAVE_CALL_AI_DEFAULT_VOICE,
             speed=speed,
-            language=getattr(configuration.stt, "language", DOGRAH_DEFAULT_LANGUAGE)
-            or DOGRAH_DEFAULT_LANGUAGE,
+            language=getattr(configuration.stt, "language", OCTAVE_CALL_AI_DEFAULT_LANGUAGE)
+            or OCTAVE_CALL_AI_DEFAULT_LANGUAGE,
         ),
     )
 
 
-def _first_dograh_api_key(configuration: EffectiveAIModelConfiguration) -> str | None:
+def _first_octave_call_ai_api_key(configuration: EffectiveAIModelConfiguration) -> str | None:
     for service in (
         configuration.llm,
         configuration.tts,
@@ -459,7 +459,7 @@ def _first_dograh_api_key(configuration: EffectiveAIModelConfiguration) -> str |
         configuration.embeddings,
         configuration.realtime,
     ):
-        if service is None or _provider(service) != ServiceProviders.DOGRAH:
+        if service is None or _provider(service) != ServiceProviders.OCTAVE_CALL_AI:
             continue
         try:
             return _single_api_key(service)

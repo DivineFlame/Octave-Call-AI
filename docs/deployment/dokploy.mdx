@@ -1,0 +1,164 @@
+---
+title: "Dokploy"
+description: "Deploy Octave-Call-AI on Dokploy using Docker Compose"
+---
+
+This guide deploys Octave-Call-AI as a Dokploy **Compose** service. Dokploy handles HTTPS and routing through its Domains tab, while the compose file runs the UI, API, Postgres, Redis, MinIO, and TURN services. Ollama is expected to already be running with Octave CRM and is reached through a shared Docker network.
+
+## Requirements
+
+- A Dokploy server with Docker Compose support enabled
+- DNS records pointed at the Dokploy server:
+  - `app.example.com` for the UI
+  - `api.example.com` for the API and WebSocket endpoints
+  - `storage.example.com` for MinIO object URLs
+  - `turn.example.com` for TURN
+- Host firewall access for TURN:
+  - TCP/UDP `3478`
+  - TCP/UDP `5349`
+  - UDP `49152-49200`
+
+## Connect Existing Octave CRM Ollama
+
+Octave-Call-AI connects to the Ollama container that already runs with Octave CRM. Both containers must be on the same Docker network, and the Ollama container must be reachable by the hostname `ollama`.
+
+If the shared network does not exist yet, create it:
+
+```bash
+docker network create octave-ai-network
+```
+
+Find the existing Octave CRM Ollama container:
+
+```bash
+docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}"
+```
+
+Connect that container to the shared network with the `ollama` alias:
+
+```bash
+docker network connect --alias ollama octave-ai-network <your-ollama-container-name>
+```
+
+If the container is already attached to that network, Docker may say the endpoint already exists. In that case, inspect the network and confirm the container has the `ollama` alias:
+
+```bash
+docker network inspect octave-ai-network
+```
+
+Pull the required models in the existing Octave CRM Ollama container if they are not already present:
+
+```bash
+docker exec -it <your-ollama-container-name> ollama pull llama3.1
+docker exec -it <your-ollama-container-name> ollama pull rjmalagon/gte-qwen2-1.5b-instruct-embed-f16
+```
+
+## Create the Octave-Call-AI Compose Service
+
+1. In Dokploy, create a project.
+2. Add a new **Compose** service.
+3. Select your Git repository and branch.
+4. Set **Compose Path** to:
+
+```text
+docker-compose.dokploy.yaml
+```
+
+5. Paste the values from `.env.dokploy.example` into Dokploy's **Environment** editor and replace every placeholder secret/domain.
+
+Set the shared network value to the Docker network that contains the Octave CRM Ollama container:
+
+```env
+SHARED_DOCKER_NETWORK=octave-ai-network
+```
+
+## Configure Domains
+
+In the Dokploy service, open the **Domains** tab and add:
+
+| Domain | Service | Port |
+| --- | --- | --- |
+| `app.example.com` | `ui` | `3010` |
+| `api.example.com` | `api` | `8000` |
+| `storage.example.com` | `minio` | `9000` |
+
+Set the environment values to match those public domains:
+
+```env
+UI_APP_URL=https://app.example.com
+BACKEND_API_ENDPOINT=https://api.example.com
+MINIO_PUBLIC_ENDPOINT=https://storage.example.com
+TURN_HOST=turn.example.com
+```
+
+<Note>
+Dokploy does not route TURN UDP traffic through the Domains tab. The compose file publishes TURN ports directly on the host, so point `turn.example.com` at the same server IP and keep the firewall ports open.
+</Note>
+
+## Deploy
+
+Click **Deploy** in Dokploy. When deployment finishes:
+
+1. Open `https://app.example.com`.
+2. Sign up or log in using the local OSS auth flow.
+3. Check the backend health endpoint at `https://api.example.com/api/v1/health`.
+4. Upload a small file or recording to verify `https://storage.example.com/voice-audio/...` URLs resolve.
+
+## Run Alongside Octave CRM
+
+Yes. Deploy Octave CRM as a separate Dokploy project or Compose service with its own domains, for example:
+
+| App | Domain |
+| --- | --- |
+| Octave CRM | `crm.example.com` |
+| Octave-Call-AI UI | `app.example.com` |
+| Octave-Call-AI API | `api.example.com` |
+
+Use `https://api.example.com` as the service URL from Octave CRM when CRM needs to trigger calls, fetch run data, or receive workflow/webhook callbacks. Keep the CRM database and the Octave-Call-AI database separate unless you intentionally build a shared integration layer.
+
+## Ollama Models
+
+In Octave-Call-AI, configure the LLM provider as **OpenAI** and set:
+
+| Field | Value |
+| --- | --- |
+| Provider | `OpenAI` |
+| Base URL | `http://ollama:11434/v1` |
+| API Key | `ollama` |
+| Model | `llama3.1` or another model you pulled |
+
+Ollama exposes an OpenAI-compatible `/v1` endpoint, so Octave-Call-AI can use it through the existing OpenAI-compatible `base_url` field.
+
+For fully local Knowledge Base chunked search, configure **AI Models Configuration -> Embedding**:
+
+| Field | Value |
+| --- | --- |
+| Provider | `Ollama` |
+| Base URL | `http://ollama:11434/v1` |
+| API Key | `ollama` |
+| Model | `rjmalagon/gte-qwen2-1.5b-instruct-embed-f16` |
+
+The knowledge-base vector table currently expects 1536-dimensional embeddings, so use a 1536-dimensional Ollama embedding model. Smaller Ollama embedding models such as `nomic-embed-text` and `mxbai-embed-large` do not match this deployment's existing vector column without a database migration.
+
+<Warning>
+Do not expose Ollama directly to the public internet. Keep it internal on the shared Docker network and route only the Octave-Call-AI UI/API/storage domains through Dokploy.
+</Warning>
+
+## Updates
+
+The Dokploy compose file uses:
+
+```env
+IMAGE_TAG=latest
+```
+
+To pin a release, set `IMAGE_TAG` to a specific published image tag in the Dokploy Environment editor and redeploy.
+
+## Notes
+
+- Dokploy writes environment values to `.env`; the compose file references those values explicitly.
+- The `SHARED_DOCKER_NETWORK` Docker network must exist before deploying Octave-Call-AI because the compose file treats it as an external network.
+- The existing Octave CRM Ollama container must be attached to that network with the `ollama` alias.
+- UI and API are routed by Dokploy Domains instead of the repository's standalone nginx profile.
+- The API uses `BACKEND_API_ENDPOINT` for webhooks and WebSocket URLs, so it must be the public API URL.
+- MinIO object URLs are generated from `MINIO_PUBLIC_ENDPOINT`, so the storage domain must route to the MinIO API port `9000`.

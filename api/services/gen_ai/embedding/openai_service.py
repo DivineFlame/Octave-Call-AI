@@ -98,10 +98,23 @@ class OpenAIEmbeddingService(BaseEmbeddingService):
                 input=texts,
                 model=self.model_id,
             )
-            return [item.embedding for item in response.data]
+            embeddings = [item.embedding for item in response.data]
+            self._validate_embedding_dimensions(embeddings)
+            return embeddings
         except Exception as e:
             logger.error(f"Error generating OpenAI embeddings: {e}")
             raise
+
+    def _validate_embedding_dimensions(self, embeddings: List[List[float]]) -> None:
+        for embedding in embeddings:
+            if len(embedding) != EMBEDDING_DIMENSION:
+                raise ValueError(
+                    f"Embedding model '{self.model_id}' returned "
+                    f"{len(embedding)} dimensions, but the knowledge-base vector "
+                    f"column expects {EMBEDDING_DIMENSION}. Use a "
+                    f"{EMBEDDING_DIMENSION}-dimensional embedding model or migrate "
+                    "the database vector dimension."
+                )
 
     async def embed_query(self, query: str) -> List[float]:
         """Embed a single query text using OpenAI API.

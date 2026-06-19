@@ -1,4 +1,4 @@
-"""Tests for CAMB AI TTS integration into Dograh.
+"""Tests for CAMB AI TTS integration into Octave-Call-AI.
 
 Covers:
 - CambTTSConfiguration model (defaults, custom values, JSON schema)
@@ -71,15 +71,15 @@ class TestServiceFactoryCamb:
         import sys
 
         # Mock missing modules (custom pipecat fork, not in public pipecat-ai)
-        dograh_modules = [
-            "pipecat.services.dograh",
-            "pipecat.services.dograh.llm",
-            "pipecat.services.dograh.stt",
-            "pipecat.services.dograh.tts",
+        octave_call_ai_modules = [
+            "pipecat.services.octave_call_ai",
+            "pipecat.services.octave_call_ai.llm",
+            "pipecat.services.octave_call_ai.stt",
+            "pipecat.services.octave_call_ai.tts",
             "pipecat.utils.text.xml_function_tag_filter",
         ]
         mocks = {}
-        for mod in dograh_modules:
+        for mod in octave_call_ai_modules:
             if mod not in sys.modules:
                 mocks[mod] = MagicMock()
 

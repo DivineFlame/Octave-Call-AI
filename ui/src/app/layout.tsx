@@ -29,7 +29,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Dograh",
+  title: "Octave-Call-AI",
   description: "Open Source Voice Assistant Workflow Builder",
 };
 

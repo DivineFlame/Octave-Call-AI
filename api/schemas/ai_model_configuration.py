@@ -6,10 +6,10 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from api.services.configuration.registry import (
-    DograhEmbeddingsConfiguration,
-    DograhLLMService,
-    DograhSTTService,
-    DograhTTSService,
+    OctaveCallAIEmbeddingsConfiguration,
+    OctaveCallAILLMService,
+    OctaveCallAISTTService,
+    OctaveCallAITTSService,
     EmbeddingsConfig,
     LLMConfig,
     RealtimeConfig,
@@ -18,9 +18,9 @@ from api.services.configuration.registry import (
     TTSConfig,
 )
 
-DOGRAH_SPEED_OPTIONS: tuple[float, ...] = (0.8, 1.0, 1.2)
-DOGRAH_DEFAULT_VOICE = "default"
-DOGRAH_DEFAULT_LANGUAGE = "multi"
+OCTAVE_CALL_AI_SPEED_OPTIONS: tuple[float, ...] = (0.8, 1.0, 1.2)
+OCTAVE_CALL_AI_DEFAULT_VOICE = "default"
+OCTAVE_CALL_AI_DEFAULT_LANGUAGE = "multi"
 
 
 class EffectiveAIModelConfiguration(BaseModel):
@@ -46,17 +46,17 @@ class EffectiveAIModelConfiguration(BaseModel):
         return data
 
 
-class DograhManagedAIModelConfiguration(BaseModel):
+class OctaveCallAIManagedAIModelConfiguration(BaseModel):
     api_key: str
-    voice: str = DOGRAH_DEFAULT_VOICE
+    voice: str = OCTAVE_CALL_AI_DEFAULT_VOICE
     speed: float = Field(default=1.0)
-    language: str = DOGRAH_DEFAULT_LANGUAGE
+    language: str = OCTAVE_CALL_AI_DEFAULT_LANGUAGE
 
     @model_validator(mode="after")
     def validate_speed(self):
-        if self.speed not in DOGRAH_SPEED_OPTIONS:
-            allowed = ", ".join(str(speed) for speed in DOGRAH_SPEED_OPTIONS)
-            raise ValueError(f"Dograh speed must be one of: {allowed}")
+        if self.speed not in OCTAVE_CALL_AI_SPEED_OPTIONS:
+            allowed = ", ".join(str(speed) for speed in OCTAVE_CALL_AI_SPEED_OPTIONS)
+            raise ValueError(f"Octave-Call-AI speed must be one of: {allowed}")
         return self
 
 
@@ -67,11 +67,11 @@ class BYOKPipelineAIModelConfiguration(BaseModel):
     embeddings: EmbeddingsConfig | None = None
 
     @model_validator(mode="after")
-    def reject_dograh_providers(self):
-        _reject_dograh_provider("llm", self.llm)
-        _reject_dograh_provider("tts", self.tts)
-        _reject_dograh_provider("stt", self.stt)
-        _reject_dograh_provider("embeddings", self.embeddings)
+    def reject_octave_call_ai_providers(self):
+        _reject_octave_call_ai_provider("llm", self.llm)
+        _reject_octave_call_ai_provider("tts", self.tts)
+        _reject_octave_call_ai_provider("stt", self.stt)
+        _reject_octave_call_ai_provider("embeddings", self.embeddings)
         return self
 
 
@@ -81,9 +81,9 @@ class BYOKRealtimeAIModelConfiguration(BaseModel):
     embeddings: EmbeddingsConfig | None = None
 
     @model_validator(mode="after")
-    def reject_dograh_providers(self):
-        _reject_dograh_provider("llm", self.llm)
-        _reject_dograh_provider("embeddings", self.embeddings)
+    def reject_octave_call_ai_providers(self):
+        _reject_octave_call_ai_provider("llm", self.llm)
+        _reject_octave_call_ai_provider("embeddings", self.embeddings)
         return self
 
 
@@ -103,14 +103,14 @@ class BYOKAIModelConfiguration(BaseModel):
 
 class OrganizationAIModelConfigurationV2(BaseModel):
     version: Literal[2] = 2
-    mode: Literal["dograh", "byok"]
-    dograh: DograhManagedAIModelConfiguration | None = None
+    mode: Literal["octave_call_ai", "byok"]
+    octave_call_ai: OctaveCallAIManagedAIModelConfiguration | None = None
     byok: BYOKAIModelConfiguration | None = None
 
     @model_validator(mode="after")
     def validate_selected_mode(self):
-        if self.mode == "dograh" and self.dograh is None:
-            raise ValueError("dograh configuration is required when mode is dograh")
+        if self.mode == "octave_call_ai" and self.octave_call_ai is None:
+            raise ValueError("octave-call-ai configuration is required when mode is octave-call-ai")
         if self.mode == "byok" and self.byok is None:
             raise ValueError("byok configuration is required when mode is byok")
         return self
@@ -125,10 +125,10 @@ class OrganizationAIModelConfigurationResponse(BaseModel):
 def compile_ai_model_configuration_v2(
     configuration: OrganizationAIModelConfigurationV2,
 ) -> EffectiveAIModelConfiguration:
-    if configuration.mode == "dograh":
-        if configuration.dograh is None:
-            raise ValueError("dograh configuration is required")
-        return _compile_dograh_configuration(configuration.dograh)
+    if configuration.mode == "octave_call_ai":
+        if configuration.octave_call_ai is None:
+            raise ValueError("octave-call-ai configuration is required")
+        return _compile_octave_call_ai_configuration(configuration.octave_call_ai)
 
     if configuration.byok is None:
         raise ValueError("byok configuration is required")
@@ -155,30 +155,30 @@ def compile_ai_model_configuration_v2(
     )
 
 
-def _compile_dograh_configuration(
-    configuration: DograhManagedAIModelConfiguration,
+def _compile_octave_call_ai_configuration(
+    configuration: OctaveCallAIManagedAIModelConfiguration,
 ) -> EffectiveAIModelConfiguration:
     return EffectiveAIModelConfiguration(
-        llm=DograhLLMService(
-            provider=ServiceProviders.DOGRAH,
+        llm=OctaveCallAILLMService(
+            provider=ServiceProviders.OCTAVE_CALL_AI,
             api_key=configuration.api_key,
             model="default",
         ),
-        tts=DograhTTSService(
-            provider=ServiceProviders.DOGRAH,
+        tts=OctaveCallAITTSService(
+            provider=ServiceProviders.OCTAVE_CALL_AI,
             api_key=configuration.api_key,
             model="default",
             voice=configuration.voice,
             speed=configuration.speed,
         ),
-        stt=DograhSTTService(
-            provider=ServiceProviders.DOGRAH,
+        stt=OctaveCallAISTTService(
+            provider=ServiceProviders.OCTAVE_CALL_AI,
             api_key=configuration.api_key,
             model="default",
             language=configuration.language,
         ),
-        embeddings=DograhEmbeddingsConfiguration(
-            provider=ServiceProviders.DOGRAH,
+        embeddings=OctaveCallAIEmbeddingsConfiguration(
+            provider=ServiceProviders.OCTAVE_CALL_AI,
             api_key=configuration.api_key,
             model="default",
         ),
@@ -187,8 +187,8 @@ def _compile_dograh_configuration(
     )
 
 
-def _reject_dograh_provider(section: str, service) -> None:
+def _reject_octave_call_ai_provider(section: str, service) -> None:
     if service is None:
         return
-    if getattr(service, "provider", None) == ServiceProviders.DOGRAH:
-        raise ValueError(f"BYOK {section} cannot use Dograh provider")
+    if getattr(service, "provider", None) == ServiceProviders.OCTAVE_CALL_AI:
+        raise ValueError(f"BYOK {section} cannot use Octave-Call-AI provider")

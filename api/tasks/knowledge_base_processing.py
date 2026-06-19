@@ -13,7 +13,7 @@ from loguru import logger
 from api.db import db_client
 from api.db.models import KnowledgeBaseChunkModel
 from api.services.configuration.registry import ServiceProviders
-from api.services.gen_ai import AzureOpenAIEmbeddingService, OpenAIEmbeddingService
+from api.services.gen_ai import create_embedding_service
 from api.services.mps_service_key_client import mps_service_key_client
 from api.services.storage import storage_fs
 
@@ -188,7 +188,10 @@ async def process_knowledge_base_document(
                     f"model={embeddings_model}"
                 )
 
-        if not embeddings_api_key:
+        if (
+            not embeddings_api_key
+            and embeddings_provider != ServiceProviders.OLLAMA.value
+        ):
             error_message = (
                 "API key not configured. Please set your API key in "
                 "Model Configurations > Embedding to process documents."
@@ -199,21 +202,15 @@ async def process_knowledge_base_document(
             )
             return
 
-        if embeddings_provider == ServiceProviders.AZURE.value and embeddings_endpoint:
-            embedding_service = AzureOpenAIEmbeddingService(
-                db_client=db_client,
-                api_key=embeddings_api_key,
-                endpoint=embeddings_endpoint,
-                model_id=embeddings_model or "text-embedding-3-small",
-                api_version=embeddings_api_version or "2024-02-15-preview",
-            )
-        else:
-            embedding_service = OpenAIEmbeddingService(
-                db_client=db_client,
-                api_key=embeddings_api_key,
-                model_id=embeddings_model or "text-embedding-3-small",
-                base_url=embeddings_base_url,
-            )
+        embedding_service = create_embedding_service(
+            db_client=db_client,
+            provider=embeddings_provider,
+            api_key=embeddings_api_key,
+            model_id=embeddings_model,
+            base_url=embeddings_base_url,
+            endpoint=embeddings_endpoint,
+            api_version=embeddings_api_version,
+        )
 
         mps_chunks = mps_response.get("chunks", [])
         if not mps_chunks:

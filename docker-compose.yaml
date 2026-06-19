@@ -63,9 +63,9 @@ services:
     networks:
       - app-network
 
-  dograh-init:
+  octave-call-ai-init:
     image: bash:5.2
-    container_name: dograh_init
+    container_name: octave_call_ai_init
     profiles: ["remote", "local-turn"]
     environment:
       ENVIRONMENT: "${ENVIRONMENT:-local}"
@@ -84,14 +84,14 @@ services:
       - nginx-generated:/generated/nginx
       - coturn-generated:/generated/coturn
     command:
-      - /workspace/scripts/run_dograh_init.sh
+      - /workspace/scripts/run_octave_call_ai_init.sh
 
   nginx:
     image: nginx:alpine
     container_name: nginx_https
     profiles: ["remote"]
     depends_on:
-      dograh-init:
+      octave-call-ai-init:
         condition: service_completed_successfully
       ui:
         condition: service_started
@@ -110,7 +110,7 @@ services:
     restart: unless-stopped
     profiles: ["remote", "local-turn"]
     depends_on:
-      dograh-init:
+      octave-call-ai-init:
         condition: service_completed_successfully
     ports:
       - "3478:3478/udp"
@@ -127,7 +127,7 @@ services:
       - app-network
 
   api:
-    image: ${REGISTRY:-dograhai}/dograh-api:latest
+    image: ${REGISTRY:-divineflame}/octave-call-ai-api:latest
     volumes:
       - shared-tmp:/tmp
     environment:
@@ -160,7 +160,7 @@ services:
       MINIO_SECURE: "false"
 
       # Number of uvicorn worker processes (each is its own process bound to a
-      # distinct port starting at 8000). dograh-init renders nginx upstreams
+      # distinct port starting at 8000). octave-call-ai-init renders nginx upstreams
       # from this value and nginx load-balances across them with least_conn.
       FASTAPI_WORKERS: "${FASTAPI_WORKERS:-1}"
 
@@ -220,7 +220,7 @@ services:
       - app-network
 
   ui:
-    image: ${REGISTRY:-dograhai}/dograh-ui:latest
+    image: ${REGISTRY:-divineflame}/octave-call-ai-ui:latest
     environment:
       # Bind the Next.js standalone server to all interfaces
       HOSTNAME: "0.0.0.0"

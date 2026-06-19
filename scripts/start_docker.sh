@@ -2,7 +2,7 @@
 set -e
 
 ENV_FILE=".env"
-REGISTRY="${REGISTRY:-ghcr.io/dograh-hq}"
+REGISTRY="${REGISTRY:-ghcr.io/DivineFlame}"
 ENABLE_TELEMETRY="${ENABLE_TELEMETRY:-true}"
 
 fail() {
@@ -93,14 +93,14 @@ echo "  REGISTRY=$REGISTRY ENABLE_TELEMETRY=$ENABLE_TELEMETRY docker compose up 
 echo ""
 
 if [[ ! -t 0 ]]; then
-    echo "Run the command above from an interactive shell to start Dograh."
+    echo "Run the command above from an interactive shell to start Octave-Call-AI."
     exit 0
 fi
 
-read -r -p "Start Dograh now? [Y/n]: " answer
+read -r -p "Start Octave-Call-AI now? [Y/n]: " answer
 case "$answer" in
     [Nn]*)
-        echo "Dograh was not started."
+        echo "Octave-Call-AI was not started."
         exit 0
         ;;
 esac

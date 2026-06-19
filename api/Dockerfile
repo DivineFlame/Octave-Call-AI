@@ -115,9 +115,9 @@ FROM python:3.13-slim AS runner
 
 WORKDIR /app
 
-RUN groupadd --system dograh \
- && useradd --system --gid dograh --no-log-init --home-dir /app --shell /usr/sbin/nologin dograh \
- && chown dograh:dograh /app
+RUN groupadd --system octave-call-ai \
+ && useradd --system --gid octave-call-ai --no-log-init --home-dir /app --shell /usr/sbin/nologin octave-call-ai \
+ && chown octave-call-ai:octave-call-ai /app
 
 # Static ffmpeg + ffprobe (used by audio_converter, audio_file_cache, etc.)
 COPY --from=ffmpeg-static /usr/local/bin/ffmpeg /usr/local/bin/ffmpeg
@@ -143,23 +143,23 @@ ENV PYTHONUNBUFFERED=1
 
 # Copy application code (chown at copy-time avoids a duplicate /app layer
 # from a later `RUN chown -R`, which would double the on-disk size of /app).
-COPY --chown=dograh:dograh ./api ./api
-COPY --chown=dograh:dograh ./scripts/start_services_docker.sh ./scripts/start_services_docker.sh
+COPY --chown=octave-call-ai:octave-call-ai ./api ./api
+COPY --chown=octave-call-ai:octave-call-ai ./scripts/start_services_docker.sh ./scripts/start_services_docker.sh
 
 # ts_validator Node deps (built in ts-deps stage with full node:22-slim image).
 # The validator runs as a short-lived subprocess from api/mcp_server/ts_bridge.py.
-COPY --from=ts-deps --chown=dograh:dograh /ts_validator/node_modules ./api/mcp_server/ts_validator/node_modules
+COPY --from=ts-deps --chown=octave-call-ai:octave-call-ai /ts_validator/node_modules ./api/mcp_server/ts_validator/node_modules
 
 # Product documentation — read at runtime by the MCP docs tools
-# (search_dograh_docs / fetch_dograh_doc) so agents can learn Dograh.
-COPY --chown=dograh:dograh ./docs ./docs
+# (search_octave_call_ai_docs / fetch_octave_call_ai_doc) so agents can learn Octave-Call-AI.
+COPY --chown=octave-call-ai:octave-call-ai ./docs ./docs
 
 ENV PYTHONPATH=/app
 
 # Disable file logging in Docker - logs go to stdout for docker logs
 ENV LOG_TO_FILE=false
 
-USER dograh
+USER octave-call-ai
 
 # Expose the port FastAPI will run on
 EXPOSE 8000

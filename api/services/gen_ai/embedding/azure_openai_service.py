@@ -102,7 +102,7 @@ class AzureOpenAIEmbeddingService(BaseEmbeddingService):
                 raise ValueError(
                     "Azure OpenAI embedding deployment "
                     f"{self.model_id!r} returned {len(embedding)} dimensions; "
-                    "Dograh knowledge base storage currently supports "
+                    "Octave-Call-AI knowledge base storage currently supports "
                     f"{EMBEDDING_DIMENSION}-dimensional embeddings."
                 )
 

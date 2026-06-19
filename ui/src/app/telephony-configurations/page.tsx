@@ -157,7 +157,7 @@ export default function TelephonyConfigurationsPage() {
               Connect one or more telephony provider accounts. Each campaign uses one
               configuration; inbound calls are routed to the right one by account ID.{" "}
               <a
-                href="https://docs.dograh.com/integrations/telephony/overview"
+                href="https://github.com/DivineFlame/Octave-Call-AI/tree/main/docs/integrations/telephony/overview"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-0.5 underline"

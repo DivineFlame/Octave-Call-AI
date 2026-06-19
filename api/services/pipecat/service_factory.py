@@ -27,9 +27,9 @@ from pipecat.services.deepgram.flux.stt import (
 )
 from pipecat.services.deepgram.stt import DeepgramSTTService, DeepgramSTTSettings
 from pipecat.services.deepgram.tts import DeepgramTTSService, DeepgramTTSSettings
-from pipecat.services.dograh.llm import DograhLLMService
-from pipecat.services.dograh.stt import DograhSTTService, DograhSTTSettings
-from pipecat.services.dograh.tts import DograhTTSService, DograhTTSSettings
+from pipecat.services.octave_call_ai.llm import OctaveCallAILLMService
+from pipecat.services.octave_call_ai.stt import OctaveCallAISTTService, OctaveCallAISTTSettings
+from pipecat.services.octave_call_ai.tts import OctaveCallAITTSService, OctaveCallAITTSSettings
 from pipecat.services.elevenlabs.tts import ElevenLabsTTSService, ElevenLabsTTSSettings
 from pipecat.services.gladia.stt import GladiaSTTService, GladiaSTTSettings
 from pipecat.services.google.llm import GoogleLLMService, GoogleLLMSettings
@@ -190,14 +190,14 @@ def create_stt_service(
             api_key=user_config.stt.api_key,
             sample_rate=audio_config.transport_in_sample_rate,
         )
-    elif user_config.stt.provider == ServiceProviders.DOGRAH.value:
+    elif user_config.stt.provider == ServiceProviders.OCTAVE_CALL_AI.value:
         base_url = MPS_API_URL.replace("http://", "ws://").replace("https://", "wss://")
         language = getattr(user_config.stt, "language", None) or "multi"
-        return DograhSTTService(
+        return OctaveCallAISTTService(
             base_url=base_url,
             api_key=user_config.stt.api_key,
             correlation_id=correlation_id,
-            settings=DograhSTTSettings(
+            settings=OctaveCallAISTTSettings(
                 model=user_config.stt.model,
                 language=language,
             ),
@@ -489,14 +489,14 @@ def create_tts_service(
             skip_aggregator_types=["recording_router", "recording"],
             silence_time_s=1.0,
         )
-    elif user_config.tts.provider == ServiceProviders.DOGRAH.value:
+    elif user_config.tts.provider == ServiceProviders.OCTAVE_CALL_AI.value:
         # Convert HTTP URL to WebSocket URL for TTS
         base_url = MPS_API_URL.replace("http://", "ws://").replace("https://", "wss://")
-        return DograhTTSService(
+        return OctaveCallAITTSService(
             base_url=base_url,
             api_key=user_config.tts.api_key,
             correlation_id=correlation_id,
-            settings=DograhTTSSettings(
+            settings=OctaveCallAITTSSettings(
                 model=user_config.tts.model,
                 voice=user_config.tts.voice,
                 speed=user_config.tts.speed,
@@ -755,8 +755,8 @@ def create_llm_service_from_provider(
             endpoint=endpoint,
             settings=AzureLLMSettings(model=model, temperature=0.1),
         )
-    elif provider == ServiceProviders.DOGRAH.value:
-        return DograhLLMService(
+    elif provider == ServiceProviders.OCTAVE_CALL_AI.value:
+        return OctaveCallAILLMService(
             base_url=f"{MPS_API_URL}/api/v1/llm",
             api_key=api_key,
             correlation_id=correlation_id,
@@ -828,7 +828,7 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
 
     if provider == ServiceProviders.OPENAI_REALTIME.value:
         from api.services.pipecat.realtime.openai_realtime import (
-            DograhOpenAIRealtimeLLMService,
+            OctaveCallAIOpenAIRealtimeLLMService,
         )
         from pipecat.services.openai.realtime.events import (
             AudioConfiguration,
@@ -838,9 +838,9 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
             SessionProperties,
         )
 
-        return DograhOpenAIRealtimeLLMService(
+        return OctaveCallAIOpenAIRealtimeLLMService(
             api_key=api_key,
-            settings=DograhOpenAIRealtimeLLMService.Settings(
+            settings=OctaveCallAIOpenAIRealtimeLLMService.Settings(
                 model=model,
                 session_properties=SessionProperties(
                     audio=AudioConfiguration(
@@ -856,13 +856,13 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
         )
     elif provider == ServiceProviders.GROK_REALTIME.value:
         from api.services.pipecat.realtime.grok_realtime import (
-            DograhGrokRealtimeLLMService,
+            OctaveCallAIGrokRealtimeLLMService,
         )
         from pipecat.services.xai.realtime.events import SessionProperties
 
-        return DograhGrokRealtimeLLMService(
+        return OctaveCallAIGrokRealtimeLLMService(
             api_key=api_key,
-            settings=DograhGrokRealtimeLLMService.Settings(
+            settings=OctaveCallAIGrokRealtimeLLMService.Settings(
                 model=model,
                 session_properties=SessionProperties(
                     voice=voice or "Ara",
@@ -871,25 +871,25 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
         )
     elif provider == ServiceProviders.ULTRAVOX_REALTIME.value:
         from api.services.pipecat.realtime.ultravox_realtime import (
-            DograhUltravoxOneShotInputParams,
-            DograhUltravoxRealtimeLLMService,
+            OctaveCallAIUltravoxOneShotInputParams,
+            OctaveCallAIUltravoxRealtimeLLMService,
         )
 
-        return DograhUltravoxRealtimeLLMService(
-            params=DograhUltravoxOneShotInputParams(
+        return OctaveCallAIUltravoxRealtimeLLMService(
+            params=OctaveCallAIUltravoxOneShotInputParams(
                 api_key=api_key,
                 model=model,
                 voice=voice,
                 output_medium="voice",
             ),
-            settings=DograhUltravoxRealtimeLLMService.Settings(
+            settings=OctaveCallAIUltravoxRealtimeLLMService.Settings(
                 model=model,
                 output_medium="voice",
             ),
         )
     elif provider == ServiceProviders.GOOGLE_REALTIME.value:
         from api.services.pipecat.realtime.gemini_live import (
-            DograhGeminiLiveLLMService,
+            OctaveCallAIGeminiLiveLLMService,
         )
 
         # Gemini Live enables input/output audio transcription by default
@@ -900,13 +900,13 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
         }
         if language:
             settings_kwargs["language"] = language
-        return DograhGeminiLiveLLMService(
+        return OctaveCallAIGeminiLiveLLMService(
             api_key=api_key,
-            settings=DograhGeminiLiveLLMService.Settings(**settings_kwargs),
+            settings=OctaveCallAIGeminiLiveLLMService.Settings(**settings_kwargs),
         )
     elif provider == ServiceProviders.GOOGLE_VERTEX_REALTIME.value:
         from api.services.pipecat.realtime.gemini_live_vertex import (
-            DograhGeminiLiveVertexLLMService,
+            OctaveCallAIGeminiLiveVertexLLMService,
         )
 
         project_id = getattr(realtime_config, "project_id", None)
@@ -919,15 +919,15 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
         }
         if language:
             settings_kwargs["language"] = language
-        return DograhGeminiLiveVertexLLMService(
+        return OctaveCallAIGeminiLiveVertexLLMService(
             credentials=credentials,
             project_id=project_id,
             location=location,
-            settings=DograhGeminiLiveVertexLLMService.Settings(**settings_kwargs),
+            settings=OctaveCallAIGeminiLiveVertexLLMService.Settings(**settings_kwargs),
         )
     elif provider == ServiceProviders.AZURE_REALTIME.value:
         from api.services.pipecat.realtime.azure_realtime import (
-            DograhAzureRealtimeLLMService,
+            OctaveCallAIAzureRealtimeLLMService,
         )
         from pipecat.services.openai.realtime.events import (
             AudioConfiguration,
@@ -960,10 +960,10 @@ def create_realtime_llm_service(user_config, audio_config: "AudioConfig"):
                 "",
             )
         )
-        return DograhAzureRealtimeLLMService(
+        return OctaveCallAIAzureRealtimeLLMService(
             api_key=api_key,
             base_url=wss_url,
-            settings=DograhAzureRealtimeLLMService.Settings(
+            settings=OctaveCallAIAzureRealtimeLLMService.Settings(
                 model=model,
                 session_properties=SessionProperties(
                     audio=AudioConfiguration(

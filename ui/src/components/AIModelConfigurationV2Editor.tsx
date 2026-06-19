@@ -19,9 +19,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LANGUAGE_DISPLAY_NAMES } from "@/constants/languages";
 
-type ModelMode = "realtime" | "dograh" | "byok";
+type ModelMode = "realtime" | "octave_call_ai" | "byok";
 
-interface DograhDefaults {
+interface OctaveCallAIDefaults {
     voices: string[];
     allow_custom_input?: boolean;
     speeds: number[];
@@ -34,7 +34,7 @@ interface DograhDefaults {
 }
 
 export interface ModelConfigurationDefaultsV2 {
-    dograh: DograhDefaults;
+    octave_call_ai: OctaveCallAIDefaults;
     byok: {
         pipeline: ServiceConfigurationDefaults;
         realtime: {
@@ -46,7 +46,7 @@ export interface ModelConfigurationDefaultsV2 {
     };
 }
 
-interface DograhFormState {
+interface OctaveCallAIFormState {
     api_key: string;
     voice: string;
     speed: number;
@@ -72,12 +72,12 @@ function asRecord(value: unknown): Record<string, unknown> | null {
         : null;
 }
 
-function isDograhEffectiveConfig(config: Record<string, unknown> | null | undefined): boolean {
+function isOctaveCallAIEffectiveConfig(config: Record<string, unknown> | null | undefined): boolean {
     if (!config || config.is_realtime) return false;
     const llm = asRecord(config.llm);
     const tts = asRecord(config.tts);
     const stt = asRecord(config.stt);
-    return llm?.provider === "dograh" && tts?.provider === "dograh" && stt?.provider === "dograh";
+    return llm?.provider === "octave_call_ai" && tts?.provider === "octave_call_ai" && stt?.provider === "octave_call_ai";
 }
 
 function byokDefaults(defaults: ModelConfigurationDefaultsV2): ServiceConfigurationDefaults {
@@ -151,7 +151,7 @@ function getByokInitialConfig(
         return matchesTab(byokConfiguration) ? byokConfiguration : emptyByokInitialConfig(wantRealtime);
     }
 
-    if (configuration?.mode === "dograh" || isDograhEffectiveConfig(effectiveConfiguration)) {
+    if (configuration?.mode === "octave_call_ai" || isOctaveCallAIEffectiveConfig(effectiveConfiguration)) {
         return emptyByokInitialConfig(wantRealtime);
     }
 
@@ -159,23 +159,25 @@ function getByokInitialConfig(
     return matchesTab(effective) ? (effective as Record<string, unknown>) : emptyByokInitialConfig(wantRealtime);
 }
 
-function buildDograhState(
+function buildOctaveCallAIState(
     defaults: ModelConfigurationDefaultsV2,
     configuration: Record<string, unknown> | null,
     effectiveConfiguration: Record<string, unknown> | null,
-): DograhFormState {
-    const fallback = defaults.dograh.defaults;
-    const configuredDograh = configuration?.mode === "dograh" ? asRecord(configuration.dograh) : null;
-    if (configuredDograh) {
+): OctaveCallAIFormState {
+    const fallback = defaults.octaveCallAI.defaults;
+    const configuredOctaveCallAI = configuration?.mode === "octave_call_ai"
+        ? asRecord(configuration.octave_call_ai)
+        : null;
+    if (configuredOctaveCallAI) {
         return {
-            api_key: String(configuredDograh.api_key || ""),
-            voice: String(configuredDograh.voice || fallback.voice),
-            speed: Number(configuredDograh.speed || fallback.speed),
-            language: String(configuredDograh.language || fallback.language),
+            api_key: String(configuredOctaveCallAI.api_key || ""),
+            voice: String(configuredOctaveCallAI.voice || fallback.voice),
+            speed: Number(configuredOctaveCallAI.speed || fallback.speed),
+            language: String(configuredOctaveCallAI.language || fallback.language),
         };
     }
 
-    if (isDograhEffectiveConfig(effectiveConfiguration)) {
+    if (isOctaveCallAIEffectiveConfig(effectiveConfiguration)) {
         const llm = asRecord(effectiveConfiguration?.llm);
         const tts = asRecord(effectiveConfiguration?.tts);
         const stt = asRecord(effectiveConfiguration?.stt);
@@ -199,11 +201,11 @@ function preferredMode(
     configuration: Record<string, unknown> | null,
     effectiveConfiguration: Record<string, unknown> | null,
 ): ModelMode {
-    if (configuration?.mode === "dograh") return "dograh";
+    if (configuration?.mode === "octave_call_ai") return "octave_call_ai";
     if (configuration?.mode === "byok") {
         return asRecord(configuration.byok)?.mode === "realtime" ? "realtime" : "byok";
     }
-    if (isDograhEffectiveConfig(effectiveConfiguration)) return "dograh";
+    if (isOctaveCallAIEffectiveConfig(effectiveConfiguration)) return "octave_call_ai";
     return Boolean(effectiveConfiguration?.is_realtime) ? "realtime" : "byok";
 }
 
@@ -236,7 +238,7 @@ function requireByokService(
     if (
         !serviceConfiguration
         || !serviceConfiguration.provider
-        || serviceConfiguration.provider === "dograh"
+        || serviceConfiguration.provider === "octave_call_ai"
         || !hasRequiredApiKey(service, serviceConfiguration, defaults)
     ) {
         throw new Error(`${service} configuration is required`);
@@ -246,7 +248,7 @@ function requireByokService(
 
 function optionalByokService(config: Record<string, unknown>, service: ServiceSegment): Record<string, unknown> | undefined {
     const serviceConfiguration = asRecord(config[service]);
-    if (!serviceConfiguration?.provider || serviceConfiguration.provider === "dograh") return undefined;
+    if (!serviceConfiguration?.provider || serviceConfiguration.provider === "octave_call_ai") return undefined;
     return serviceConfiguration;
 }
 
@@ -258,50 +260,50 @@ export function AIModelConfigurationV2Editor({
     submitLabel = "Save Configuration",
 }: AIModelConfigurationV2EditorProps) {
     const defaultsForByok = useMemo(() => byokDefaults(defaults), [defaults]);
-    const [mode, setMode] = useState<ModelMode>("dograh");
-    const [dograh, setDograh] = useState<DograhFormState>(() => ({
+    const [mode, setMode] = useState<ModelMode>("octave_call_ai");
+    const [octaveCallAI, setOctaveCallAI] = useState<OctaveCallAIFormState>(() => ({
         api_key: "",
-        voice: defaults.dograh.defaults.voice,
-        speed: defaults.dograh.defaults.speed,
-        language: defaults.dograh.defaults.language,
+        voice: defaults.octaveCallAI.defaults.voice,
+        speed: defaults.octaveCallAI.defaults.speed,
+        language: defaults.octaveCallAI.defaults.language,
     }));
     const [realtimeInitialConfig, setRealtimeInitialConfig] = useState<Record<string, unknown> | null>(null);
     const [pipelineInitialConfig, setPipelineInitialConfig] = useState<Record<string, unknown> | null>(null);
-    const [isSavingDograh, setIsSavingDograh] = useState(false);
+    const [isSavingOctaveCallAI, setIsSavingOctaveCallAI] = useState(false);
     const [isCustomVoice, setIsCustomVoice] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const allowCustomVoice = defaults.dograh.allow_custom_input ?? false;
+    const allowCustomVoice = defaults.octaveCallAI.allow_custom_input ?? false;
 
     useEffect(() => {
         const rawConfiguration = asRecord(configuration);
         const rawEffectiveConfiguration = asRecord(effectiveConfiguration);
         setMode(preferredMode(rawConfiguration, rawEffectiveConfiguration));
-        const nextDograh = buildDograhState(defaults, rawConfiguration, rawEffectiveConfiguration);
-        setDograh(nextDograh);
-        setIsCustomVoice(allowCustomVoice && !defaults.dograh.voices.includes(nextDograh.voice));
+        const nextOctaveCallAI = buildOctaveCallAIState(defaults, rawConfiguration, rawEffectiveConfiguration);
+        setOctaveCallAI(nextOctaveCallAI);
+        setIsCustomVoice(allowCustomVoice && !defaults.octaveCallAI.voices.includes(nextOctaveCallAI.voice));
         setRealtimeInitialConfig(getByokInitialConfig(rawConfiguration, rawEffectiveConfiguration, true));
         setPipelineInitialConfig(getByokInitialConfig(rawConfiguration, rawEffectiveConfiguration, false));
     }, [configuration, defaults, effectiveConfiguration, allowCustomVoice]);
 
-    const saveDograhConfiguration = async () => {
-        setIsSavingDograh(true);
+    const saveOctaveCallAIConfiguration = async () => {
+        setIsSavingOctaveCallAI(true);
         setError(null);
         try {
             await onSave({
                 version: 2,
-                mode: "dograh",
-                dograh: {
-                    api_key: dograh.api_key.trim(),
-                    voice: dograh.voice,
-                    speed: dograh.speed,
-                    language: dograh.language,
+                mode: "octave_call_ai",
+                octave_call_ai: {
+                    api_key: octaveCallAI.api_key.trim(),
+                    voice: octaveCallAI.voice,
+                    speed: octaveCallAI.speed,
+                    language: octaveCallAI.language,
                 },
             });
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to save configuration");
         } finally {
-            setIsSavingDograh(false);
+            setIsSavingOctaveCallAI(false);
         }
     };
 
@@ -347,7 +349,7 @@ export function AIModelConfigurationV2Editor({
             <Tabs value={mode} onValueChange={(value) => setMode(value as ModelMode)} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="realtime">Speech to Speech</TabsTrigger>
-                    <TabsTrigger value="dograh">Dograh</TabsTrigger>
+                    <TabsTrigger value="octave_call_ai">Octave-Call-AI</TabsTrigger>
                     <TabsTrigger value="byok">BYOK</TabsTrigger>
                 </TabsList>
 
@@ -366,7 +368,7 @@ export function AIModelConfigurationV2Editor({
                     />
                 </TabsContent>
 
-                <TabsContent value="dograh" className="mt-0">
+                <TabsContent value="octave_call_ai" className="mt-0">
                     <Card>
                         <CardContent className="pt-6">
                             <div className="grid gap-4 sm:grid-cols-2">
@@ -375,16 +377,16 @@ export function AIModelConfigurationV2Editor({
                                     {isCustomVoice ? (
                                         <Input
                                             placeholder="Enter voice"
-                                            value={dograh.voice}
-                                            onChange={(event) => setDograh({ ...dograh, voice: event.target.value })}
+                                            value={octaveCallAI.voice}
+                                            onChange={(event) => setOctaveCallAI({ ...octaveCallAI, voice: event.target.value })}
                                         />
                                     ) : (
-                                        <Select value={dograh.voice} onValueChange={(voice) => setDograh({ ...dograh, voice })}>
+                                        <Select value={octaveCallAI.voice} onValueChange={(voice) => setOctaveCallAI({ ...octaveCallAI, voice })}>
                                             <SelectTrigger className="w-full">
                                                 <SelectValue placeholder="Select voice" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {defaults.dograh.voices.map((voice) => (
+                                                {defaults.octaveCallAI.voices.map((voice) => (
                                                     <SelectItem key={voice} value={voice}>
                                                         {voice}
                                                     </SelectItem>
@@ -395,17 +397,17 @@ export function AIModelConfigurationV2Editor({
                                     {allowCustomVoice && (
                                         <div className="flex items-center space-x-2">
                                             <Checkbox
-                                                id="dograh-custom-voice"
+                                                id="octave-call-ai-custom-voice"
                                                 checked={isCustomVoice}
                                                 onCheckedChange={(checked) => {
                                                     const custom = checked as boolean;
                                                     setIsCustomVoice(custom);
                                                     if (!custom) {
-                                                        setDograh({ ...dograh, voice: defaults.dograh.defaults.voice });
+                                                        setOctaveCallAI({ ...octaveCallAI, voice: defaults.octaveCallAI.defaults.voice });
                                                     }
                                                 }}
                                             />
-                                            <Label htmlFor="dograh-custom-voice" className="text-sm font-normal cursor-pointer">
+                                            <Label htmlFor="octave-call-ai-custom-voice" className="text-sm font-normal cursor-pointer">
                                                 Enter Custom Value
                                             </Label>
                                         </div>
@@ -415,14 +417,14 @@ export function AIModelConfigurationV2Editor({
                                 <div className="space-y-2">
                                     <Label>Speed</Label>
                                     <Select
-                                        value={String(dograh.speed)}
-                                        onValueChange={(speed) => setDograh({ ...dograh, speed: Number(speed) })}
+                                        value={String(octaveCallAI.speed)}
+                                        onValueChange={(speed) => setOctaveCallAI({ ...octaveCallAI, speed: Number(speed) })}
                                     >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select speed" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {defaults.dograh.speeds.map((speed) => (
+                                            {defaults.octaveCallAI.speeds.map((speed) => (
                                                 <SelectItem key={speed} value={String(speed)}>
                                                     {speed}x
                                                 </SelectItem>
@@ -433,12 +435,12 @@ export function AIModelConfigurationV2Editor({
 
                                 <div className="space-y-2 sm:col-span-2">
                                     <Label>Language</Label>
-                                    <Select value={dograh.language} onValueChange={(language) => setDograh({ ...dograh, language })}>
+                                    <Select value={octaveCallAI.language} onValueChange={(language) => setOctaveCallAI({ ...octaveCallAI, language })}>
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select language" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            {defaults.dograh.languages.map((language) => (
+                                            {defaults.octaveCallAI.languages.map((language) => (
                                                 <SelectItem key={language} value={language}>
                                                     {LANGUAGE_DISPLAY_NAMES[language] || language}
                                                 </SelectItem>
@@ -448,23 +450,23 @@ export function AIModelConfigurationV2Editor({
                                 </div>
 
                                 <div className="space-y-2 sm:col-span-2">
-                                    <Label htmlFor="dograh-api-key">API Key</Label>
+                                    <Label htmlFor="octave-call-ai-api-key">API Key</Label>
                                     <div className="relative">
                                         <KeyRound className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                                         <Input
-                                            id="dograh-api-key"
+                                            id="octave-call-ai-api-key"
                                             className="pl-9"
-                                            value={dograh.api_key}
-                                            onChange={(event) => setDograh({ ...dograh, api_key: event.target.value })}
+                                            value={octaveCallAI.api_key}
+                                            onChange={(event) => setOctaveCallAI({ ...octaveCallAI, api_key: event.target.value })}
                                             placeholder="Enter API key"
                                         />
                                     </div>
                                 </div>
                             </div>
 
-                            <Button type="button" className="mt-6 w-full" onClick={saveDograhConfiguration} disabled={isSavingDograh}>
+                            <Button type="button" className="mt-6 w-full" onClick={saveOctaveCallAIConfiguration} disabled={isSavingOctaveCallAI}>
                                 <Save className="mr-2 h-4 w-4" />
-                                {isSavingDograh ? "Saving..." : submitLabel}
+                                {isSavingOctaveCallAI ? "Saving..." : submitLabel}
                             </Button>
                         </CardContent>
                     </Card>

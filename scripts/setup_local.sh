@@ -14,7 +14,7 @@ BOOTSTRAP_LIB=""
 
 if [[ ! -f "$LIB_PATH" ]]; then
     BOOTSTRAP_LIB="$(mktemp)"
-    curl -fsSL -o "$BOOTSTRAP_LIB" "https://raw.githubusercontent.com/dograh-hq/dograh/main/scripts/lib/setup_common.sh"
+    curl -fsSL -o "$BOOTSTRAP_LIB" "https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/main/scripts/lib/setup_common.sh"
     LIB_PATH="$BOOTSTRAP_LIB"
 fi
 
@@ -30,7 +30,7 @@ trap cleanup EXIT
 
 echo -e "${BLUE}"
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                    Dograh Local Setup                        ║"
+echo "║                    Octave-Call-AI Local Setup                        ║"
 echo "║       Local docker deployment, optional TURN server          ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
@@ -108,7 +108,7 @@ FORCE_TURN_RELAY="${FORCE_TURN_RELAY:-false}"
 ENABLE_TELEMETRY="${ENABLE_TELEMETRY:-true}"
 
 # Container registry (defaults to the public OSS registry)
-REGISTRY="${REGISTRY:-ghcr.io/dograh-hq}"
+REGISTRY="${REGISTRY:-ghcr.io/DivineFlame}"
 
 echo ""
 echo -e "${GREEN}Configuration:${NC}"
@@ -122,18 +122,18 @@ echo -e "  Telemetry:     ${BLUE}$ENABLE_TELEMETRY${NC}"
 echo -e "  Registry:      ${BLUE}$REGISTRY${NC}"
 echo ""
 
-# Download compose file (skip when DOGRAH_SKIP_DOWNLOAD=1 — e.g. local repo testing).
+# Download compose file (skip when OCTAVE_CALL_AI_SKIP_DOWNLOAD=1 — e.g. local repo testing).
 TOTAL_STEPS=2
 
-if [[ "${DOGRAH_SKIP_DOWNLOAD:-}" != "1" ]]; then
+if [[ "${OCTAVE_CALL_AI_SKIP_DOWNLOAD:-}" != "1" ]]; then
     if [[ "${ENABLE_COTURN:-false}" == "true" ]]; then
         echo -e "${BLUE}[1/$TOTAL_STEPS] Downloading docker-compose.yaml and TURN helper bundle...${NC}"
     else
         echo -e "${BLUE}[1/$TOTAL_STEPS] Downloading docker-compose.yaml...${NC}"
     fi
-    curl -sS -o docker-compose.yaml https://raw.githubusercontent.com/dograh-hq/dograh/main/docker-compose.yaml
+    curl -sS -o docker-compose.yaml https://raw.githubusercontent.com/DivineFlame/Octave-Call-AI/main/docker-compose.yaml
     if [[ "${ENABLE_COTURN:-false}" == "true" ]]; then
-        dograh_download_init_support_bundle "$(pwd)" "main"
+        octave_call_ai_download_init_support_bundle "$(pwd)" "main"
     fi
     echo -e "${GREEN}✓ Deployment files downloaded${NC}"
 else
@@ -141,9 +141,9 @@ else
 fi
 
 if [[ "${ENABLE_COTURN:-false}" == "true" ]]; then
-    [[ -f scripts/run_dograh_init.sh ]] || dograh_fail "scripts/run_dograh_init.sh not found. Re-run setup_local.sh without DOGRAH_SKIP_DOWNLOAD=1, or use a full repo checkout."
-    [[ -f scripts/lib/setup_common.sh ]] || dograh_fail "scripts/lib/setup_common.sh not found. Re-run setup_local.sh without DOGRAH_SKIP_DOWNLOAD=1, or use a full repo checkout."
-    [[ -f deploy/templates/turnserver.remote.conf.template ]] || dograh_fail "deploy/templates/turnserver.remote.conf.template not found. Re-run setup_local.sh without DOGRAH_SKIP_DOWNLOAD=1, or use a full repo checkout."
+    [[ -f scripts/run_octave_call_ai_init.sh ]] || octave_call_ai_fail "scripts/run_octave_call_ai_init.sh not found. Re-run setup_local.sh without OCTAVE_CALL_AI_SKIP_DOWNLOAD=1, or use a full repo checkout."
+    [[ -f scripts/lib/setup_common.sh ]] || octave_call_ai_fail "scripts/lib/setup_common.sh not found. Re-run setup_local.sh without OCTAVE_CALL_AI_SKIP_DOWNLOAD=1, or use a full repo checkout."
+    [[ -f deploy/templates/turnserver.remote.conf.template ]] || octave_call_ai_fail "deploy/templates/turnserver.remote.conf.template not found. Re-run setup_local.sh without OCTAVE_CALL_AI_SKIP_DOWNLOAD=1, or use a full repo checkout."
 fi
 
 # Generate .env
@@ -153,7 +153,7 @@ OSS_JWT_SECRET=$(openssl rand -hex 32)
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
 
 cat > .env << ENV_EOF
-# Container registry for Dograh images
+# Container registry for Octave-Call-AI images
 REGISTRY=$REGISTRY
 
 # JWT secret for OSS authentication
@@ -190,17 +190,17 @@ echo -e "Files created in ${BLUE}$(pwd)${NC}:"
 echo "  - docker-compose.yaml"
 echo "  - .env"
 if [[ "${ENABLE_COTURN:-false}" == "true" ]]; then
-    echo "  - scripts/run_dograh_init.sh"
+    echo "  - scripts/run_octave_call_ai_init.sh"
     echo "  - scripts/lib/setup_common.sh"
     echo "  - deploy/templates/"
 fi
 echo ""
 if [[ "${ENABLE_COTURN:-false}" == "true" ]]; then
-    echo -e "${YELLOW}To start Dograh with TURN, run:${NC}"
+    echo -e "${YELLOW}To start Octave-Call-AI with TURN, run:${NC}"
     echo ""
     echo -e "  ${BLUE}docker compose --profile local-turn up --pull always${NC}"
 else
-    echo -e "${YELLOW}To start Dograh, run:${NC}"
+    echo -e "${YELLOW}To start Octave-Call-AI, run:${NC}"
     echo ""
     echo -e "  ${BLUE}docker compose up --pull always${NC}"
 fi

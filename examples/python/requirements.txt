@@ -1,2 +1,2 @@
-dograh-sdk
+octave-call-ai-sdk
 python-dotenv
