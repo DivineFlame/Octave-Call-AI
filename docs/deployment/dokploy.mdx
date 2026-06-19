@@ -20,7 +20,7 @@ This guide deploys Octave-Call-AI as a Dokploy **Compose** service. Dokploy hand
 
 ## Connect Existing Octave CRM Ollama
 
-Octave-Call-AI connects to the Ollama container that already runs with Octave CRM. Both containers must be on the same Docker network, and the Ollama container must be reachable by the hostname `ollama`.
+Octave-Call-AI connects to the Ollama container that already runs with Octave CRM. The Octave-Call-AI API container joins the CRM Ollama Docker network, and the Ollama container must be reachable by the hostname `ollama`.
 
 If the shared network does not exist yet, create it:
 
@@ -66,7 +66,7 @@ docker-compose.dokploy.yaml
 
 5. Paste the values from `.env.dokploy.example` into Dokploy's **Environment** editor and replace every placeholder secret/domain.
 
-Set the shared network value to the Docker network that contains the Octave CRM Ollama container:
+Set the shared network value to the Docker network that contains the Octave CRM Ollama container. Only the Octave-Call-AI API container joins this network; Postgres, Redis, MinIO, TURN, and UI stay on the private Octave-Call-AI app network.
 
 ```env
 SHARED_DOCKER_NETWORK=octave-ai-network
@@ -157,8 +157,9 @@ To pin a release, set `IMAGE_TAG` to a specific published image tag in the Dokpl
 ## Notes
 
 - Dokploy writes environment values to `.env`; the compose file references those values explicitly.
-- The `SHARED_DOCKER_NETWORK` Docker network must exist before deploying Octave-Call-AI because the compose file treats it as an external network.
+- The `SHARED_DOCKER_NETWORK` Docker network must exist before deploying Octave-Call-AI because the API service treats it as an external network.
 - The existing Octave CRM Ollama container must be attached to that network with the `ollama` alias.
+- Only the API container joins the CRM Ollama network; the rest of the Octave-Call-AI stack remains on its own private app network.
 - UI and API are routed by Dokploy Domains instead of the repository's standalone nginx profile.
 - The API uses `BACKEND_API_ENDPOINT` for webhooks and WebSocket URLs, so it must be the public API URL.
 - MinIO object URLs are generated from `MINIO_PUBLIC_ENDPOINT`, so the storage domain must route to the MinIO API port `9000`.
